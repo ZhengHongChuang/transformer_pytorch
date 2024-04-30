@@ -1,8 +1,8 @@
 import torch.nn as nn
 from  models.layers import MultiHeadAttention,PositionwiseFeedForward,LayerNorm
-class Decoder(nn.Module):
+class DecoderLayer(nn.Module):
     def __init__(self,d_model, ffn_hidden, n_head, drop_prob) :
-        super(Decoder,self).__init__()
+        super(DecoderLayer,self).__init__()
         self.attention1 = MultiHeadAttention(d_model,n_head)
         self.norm1 = LayerNorm(d_model)
         self.dropout1 = nn.Dropout(drop_prob)
@@ -35,7 +35,7 @@ class Decoder(nn.Module):
 #     ffn_hidden = 2048
 #     n_head = 8
 #     drop_prob = 0.1
-#     decoder = Decoder(d_model, ffn_hidden, n_head, drop_prob)
+#     decoder = DecoderLayer(d_model, ffn_hidden, n_head, drop_prob)
 #     import torch
 #     dec = torch.rand(1, 10, d_model)  # 示例输入
 #     enc = torch.rand(1, 10, d_model)  # 示例输入
