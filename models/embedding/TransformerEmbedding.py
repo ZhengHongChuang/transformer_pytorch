@@ -1,6 +1,6 @@
 import torch.nn as nn
-from PositionEncoding import PositionalEncoding
-from TokenEmbedding import TokenEmbedding
+from .PositionEncoding import PositionalEncoding
+from .TokenEmbedding import TokenEmbedding
 class TransformerEmbedding(nn.Module):
     def __init__(self, vocab_size, d_model, max_len, drop_prob, device) :
         super(TransformerEmbedding,self).__init__()
