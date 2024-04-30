@@ -7,9 +7,9 @@ import torch.nn as nn
     d_model: 词向量维度
     padding_idx: 扩充默认值
 """
-class TokenEmbedding(nn.Embedding):
-    def __init__(self, vocab_size, d_model,padding_idx = 1) :
-        super(TokenEmbedding,self).__init__(num_embeddings=vocab_size,
-                                            embedding_dim=d_model,
-                                            padding_idx=padding_idx)
-        
+class TokenEmbedding(nn.Module):
+    def __init__(self, vocab_size, d_model,device,padding_idx = 1) :
+        super(TokenEmbedding,self).__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model,padding_idx=padding_idx,device=device)
+    def forward(self, x):
+        return self.embedding(x)

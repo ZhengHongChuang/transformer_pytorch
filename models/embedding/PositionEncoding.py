@@ -13,7 +13,6 @@ class PositionalEncoding(nn.Module):
         self.encoding[:,1::2] = torch.cos(pos*div_term)
     def forward(self,x):
         _,seq_len = x.size()
-        print(x.size())
         return self.encoding[:seq_len,:]
 # if __name__=='__main__':
 #     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
