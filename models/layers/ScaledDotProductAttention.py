@@ -13,7 +13,7 @@ class ScaleDotProductAttention(nn.Module):
         k_t = k.transpose(2,3)
         score = (q@k_t)/math.sqrt(d_tensor)
         if mask is not None:
-            score.masker_fill(mask==0,e)
+            score.masked_fill(mask==0,e)
         score = self.softmax(score)
         v = score @ v
         return v ,score

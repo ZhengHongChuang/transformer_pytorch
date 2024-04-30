@@ -1,5 +1,5 @@
 import torch.nn as nn
-from ScaledDotProductAttention import ScaleDotProductAttention
+from .ScaledDotProductAttention import ScaleDotProductAttention
 
 class MultiHeadAttention(nn.Module):
     def __init__(self,d_model,n_head) :
