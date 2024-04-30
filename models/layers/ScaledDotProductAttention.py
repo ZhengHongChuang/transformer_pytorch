@@ -5,7 +5,7 @@ class ScaleDotProductAttention(nn.Module):
     def __init__(self) :
         super(ScaleDotProductAttention,self).__init__()
         self.softmax = nn.Softmax(dim=1)
-    def foward(self,q,k,v,mask = None,e=1e-12):
+    def forward(self,q,k,v,mask = None,e=1e-12):
         """
             k的形状 : [batch_size,head,max_len,d_tensor]
         """
