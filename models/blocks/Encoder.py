@@ -1,10 +1,5 @@
 import torch.nn as nn
 from  models.layers import MultiHeadAttention,PositionwiseFeedForward,LayerNorm
-# from models.layers import MultiHeadAttention,PositionwiseFeedForward,LayerNorm
-# from models.layers.LayerNorm import LayerNorm
-# from models.layers.MultiHeadAttention import MultiHeadAttention
-# from models.layers.PositionwiseFeedForward import PositionwiseFeedForward
-
 class Encoder(nn.Module):
     def __init__(self,d_model, ffn_hidden, n_head, drop_prob) :
         super(Encoder,self).__init__()
