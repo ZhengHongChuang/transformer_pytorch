@@ -1,59 +1,130 @@
-import os
-import torch
-import argparse
-from utils import utils
-from dataset import prepare
+
+from torch import nn, optim
+from torch.optim import Adam
+from torch.utils.tensorboard import SummaryWriter
+
+from data import *
+from models.model import Transformer
+from utils.bleu import idx_to_word, get_bleu
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--problem', required=True)
-    parser.add_argument('--train_step', type=int, default=200)
-    parser.add_argument('--batch_size', type=int, default=4096)
-    parser.add_argument('--max_length', type=int, default=100)
-    parser.add_argument('--n_layers', type=int, default=6)
-    parser.add_argument('--hidden_size', type=int, default=512)
-    parser.add_argument('--filter_size', type=int, default=2048)
-    parser.add_argument('--warmup', type=int, default=16000)
-    parser.add_argument('--val_every', type=int, default=5)
-    parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--label_smoothing', type=float, default=0.1)
-    parser.add_argument('--model', type=str, default='transformer')
-    parser.add_argument('--output_dir', type=str, default='./output')
-    parser.add_argument('--data_dir', type=str, default='./data')
-    parser.add_argument('--no_cuda', action='store_true')
-    parser.add_argument('--parallel', action='store_true')
-    parser.add_argument('--summary_grad', action='store_true')
-    opt = parser.parse_args()
+writer = SummaryWriter(log_dir=log_dir)
 
-    device = torch.device('cpu' if opt.no_cuda else 'cuda')
 
-    if not os.path.exists(opt.output_dir + '/last/models'):
-        os.makedirs(opt.output_dir + '/last/models')
-    if not os.path.exists(opt.data_dir):
-        os.makedirs(opt.data_dir)
-    train_data, validation_data, i_vocab_size, t_vocab_size, opt = \
-        prepare(opt.problem, opt.data_dir, opt.max_length,
-                        opt.batch_size, device, opt)
-    if i_vocab_size is not None:
-        print("# of vocabs (input):", i_vocab_size)
-    print("# of vocabs (target):", t_vocab_size)
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-    if opt.model == 'transformer':
-        from models.model import Transformer
-        model_fn = Transformer
-    if os.path.exists(opt.output_dir + '/last/models/last_model.pt'):
-        print("加载权重")
-        last_model_path = opt.output_dir + '/last/models'
-        model,global_step = utils.load_checkpoint(last_model_path,device,is_eval=False)
-    else:
-        model = model_fn(opt.s)    
-        
+
+def initialize_weights(m):
+    if hasattr(m, 'weight') and m.weight.dim() > 1:
+        nn.init.kaiming_uniform(m.weight.data)
+
+
+model = Transformer(src_pad_idx=src_pad_idx,
+                    trg_pad_idx=trg_pad_idx,
+                    trg_sos_idx=trg_sos_idx,
+                    d_model=d_model,
+                    enc_voc_size=enc_voc_size,
+                    dec_voc_size=dec_voc_size,
+                    max_len=max_len,
+                    ffn_hidden=ffn_hidden,
+                    n_head=n_heads,
+                    n_layers=n_layers,
+                    drop_prob=drop_prob,
+                    device=device).to(device)
+
+print(f'The model has {count_parameters(model):,} trainable parameters')
+model.apply(initialize_weights)
+optimizer = Adam(params=model.parameters(),
+                 lr=init_lr,
+                 weight_decay=weight_decay,
+                 eps=adam_eps)
+
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,
+                                                 verbose=True,
+                                                 factor=factor,
+                                                 patience=patience)
+
+criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
 
 
 
+def train(model, iterator, optimizer, criterion, clip, step):
+    model.train()
+    epoch_loss = 0
+    for i, batch in enumerate(iterator):
+        src = batch.src
+        trg = batch.trg
 
+        optimizer.zero_grad()
+        output = model(src, trg[:, :-1])
+        output_reshape = output.contiguous().view(-1, output.shape[-1])
+        trg = trg[:, 1:].contiguous().view(-1)
+
+        loss = criterion(output_reshape, trg)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
+        optimizer.step()
+
+        epoch_loss += loss.item()
+        writer.add_scalar('Train Loss', loss.item(), step)
+        step += 1
+
+    return epoch_loss / len(iterator), step
+
+def evaluate(model, iterator, criterion, step):
+    model.eval()
+    epoch_loss = 0
+    batch_bleu = []
+    with torch.no_grad():
+        for i, batch in enumerate(iterator):
+            src = batch.src
+            trg = batch.trg
+            output = model(src, trg[:, :-1])
+            output_reshape = output.contiguous().view(-1, output.shape[-1])
+            trg = trg[:, 1:].contiguous().view(-1)
+
+            loss = criterion(output_reshape, trg)
+            epoch_loss += loss.item()
+
+            total_bleu = []
+            for j in range(batch_size):
+                try:
+                    trg_words = idx_to_word(batch.trg[j], loader.target.vocab)
+                    output_words = output[j].max(dim=1)[1]
+                    output_words = idx_to_word(output_words, loader.target.vocab)
+                    bleu = get_bleu(hypotheses=output_words.split(), reference=trg_words.split())
+                    total_bleu.append(bleu)
+                except:
+                    pass
+
+            total_bleu = sum(total_bleu) / len(total_bleu)
+            batch_bleu.append(total_bleu)
+            
+            writer.add_scalar('BLEU Score', total_bleu, step)
+
+    batch_bleu = sum(batch_bleu) / len(batch_bleu)
+    writer.add_scalar('Validation Loss', epoch_loss / len(iterator), step)
+
+    return epoch_loss / len(iterator), batch_bleu, step
+
+def run(total_epoch, best_loss):
+    train_losses, test_losses, bleus = [], [], []
+    step = 0
+    for step in range(total_epoch):
+        train_loss, step = train(model, train_iter, optimizer, criterion, clip, step)
+        valid_loss, bleu, step = evaluate(model, valid_iter, criterion, step)
+        if step > warmup:
+            scheduler.step(valid_loss)
+        train_losses.append(train_loss)
+        test_losses.append(valid_loss)
+        bleus.append(bleu)
+        if valid_loss < best_loss:
+            best_loss = valid_loss
+            torch.save(model.state_dict(), 'weights/model-{0}.pt'.format(valid_loss))
+
+    writer.close()
 
 if __name__ == '__main__':
-    main()
+    run(total_epoch=epoch, best_loss=inf)

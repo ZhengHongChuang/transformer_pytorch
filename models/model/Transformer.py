@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from Decoder import Decoder
-from Encoder import Encoder
+from .Decoder import Decoder
+from .Encoder import Encoder
 
 
 
@@ -27,13 +27,21 @@ class Transformer(nn.Module):
         return output
     def src_mask(self,src):
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
+        # print(src_mask)
         return src_mask
-    def trg_mask(self,trg):
-        trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3)
+    def trg_mask(self, trg):
+        trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3).bool()
         trg_len = trg.shape[1]
-        trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len)).type(torch.ByteTensor).to(self.device)
+        trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len, device=self.device)).bool()
         trg_mask = trg_pad_mask & trg_sub_mask
         return trg_mask
+
+    # def trg_mask(self,trg):
+    #     trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3)
+    #     trg_len = trg.shape[1]
+    #     trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len)).type(torch.ByteTensor).to(self.device)
+    #     trg_mask = trg_pad_mask & trg_sub_mask
+    #     return trg_mask
     
 
 
