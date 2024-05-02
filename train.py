@@ -4,10 +4,8 @@ from torch.optim import Adam
 from torch.utils.tensorboard import SummaryWriter
 
 from data import *
-from models.model import Transformer
+from models.model.Transformer import Transformer
 from utils.bleu import idx_to_word, get_bleu
-
-nn.Transformer()
 writer = SummaryWriter(log_dir=log_dir)
 
 
