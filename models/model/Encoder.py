@@ -5,8 +5,16 @@ from models.embedding.TransformerEmbedding import TransformerEmbedding
 class Encoder(nn.Module):
     def __init__(self,enc_voc_size,max_len,d_model,ffn_hiden,n_head,n_layers, drop_prob, device):
         super().__init__()
-        self.embedding = TransformerEmbedding(enc_voc_size,d_model,max_len,drop_prob,device)
-        self.encoder_layers = nn.ModuleList([EncoderLayer(d_model,ffn_hiden,n_head,drop_prob) for _ in range(n_layers)])
+        self.embedding = TransformerEmbedding(vocab_size=enc_voc_size,
+                                              d_model=d_model,
+                                              max_len=max_len,
+                                              drop_prob=drop_prob,
+                                              device=device)
+        self.encoder_layers = nn.ModuleList([EncoderLayer(d_model=d_model,
+                                                          ffn_hidden=ffn_hiden,
+                                                          n_head=n_head,
+                                                          drop_prob=drop_prob) 
+                                                          for _ in range(n_layers)])
     def forward(self,x,mask):
         x = self.embedding(x)
         for layer in self.encoder_layers:

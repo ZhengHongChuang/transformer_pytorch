@@ -7,7 +7,7 @@ from data import *
 from models.model import Transformer
 from utils.bleu import idx_to_word, get_bleu
 
-
+nn.Transformer()
 writer = SummaryWriter(log_dir=log_dir)
 
 
@@ -50,7 +50,7 @@ criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 
 
 
-def train(model, iterator, optimizer, criterion, clip, step):
+def train(model, iterator, optimizer, criterion, clip):
     model.train()
     epoch_loss = 0
     for _, batch in enumerate(iterator):
@@ -69,7 +69,7 @@ def train(model, iterator, optimizer, criterion, clip, step):
         epoch_loss += loss.item()
     return epoch_loss / len(iterator)
 
-def evaluate(model, iterator, criterion, step):
+def evaluate(model, iterator, criterion):
     model.eval()
     epoch_loss = 0
     batch_bleu = []
@@ -108,8 +108,8 @@ def evaluate(model, iterator, criterion, step):
 def run(total_epoch, best_loss):
     step = 0
     for step in range(total_epoch):
-        train_loss = train(model, train_iter, optimizer, criterion, clip, step)
-        valid_loss, bleu = evaluate(model, valid_iter, criterion, step)
+        train_loss = train(model, train_iter, optimizer, criterion, clip)
+        valid_loss, bleu = evaluate(model, valid_iter, criterion)
         if step > warmup:
             scheduler.step(valid_loss)
         writer.add_scalar('Train Loss', train_loss, step+1)

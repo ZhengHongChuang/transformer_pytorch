@@ -8,25 +8,13 @@ from .Encoder import Encoder
 class Transformer(nn.Module):
     def __init__(self, src_pad_idx, trg_pad_idx, trg_sos_idx, enc_voc_size, dec_voc_size, d_model, n_head, max_len,
                  ffn_hidden, n_layers, drop_prob, device):
-        super(Transformer,self).__init__()
+        super().__init__()
         # init 
         self.src_pad_idx = src_pad_idx
         self.trg_pad_idx = trg_pad_idx
         self.trg_sos_idx = trg_sos_idx
         self.device = device
         # model
-        """
-        class Encoder(
-                vocab_size: Any,
-                max_len: Any,
-                d_model: Any,
-                ffn_hiden: Any,
-                n_head: Any,
-                n_layers: Any,
-                drop_prob: Any,
-                device: Any
-)
-        """
         self.encoder = Encoder(enc_voc_size=enc_voc_size,
                                max_len=max_len,
                                d_model = d_model,
@@ -43,8 +31,6 @@ class Transformer(nn.Module):
                                n_layers=n_layers,
                                drop_prob=drop_prob,
                                device=device)
-
-
     def forward(self,src,trg):
         src_mask = self.src_mask(src)
         trg_mask = self.trg_mask(trg)
@@ -53,7 +39,6 @@ class Transformer(nn.Module):
         return output
     def src_mask(self,src):
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-      
         return src_mask
     def trg_mask(self, trg):
         trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3).bool()

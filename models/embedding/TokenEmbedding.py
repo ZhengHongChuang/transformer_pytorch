@@ -10,6 +10,6 @@ import torch.nn as nn
 class TokenEmbedding(nn.Module):
     def __init__(self, vocab_size, d_model,padding_idx = 1) :
         super(TokenEmbedding,self).__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model,padding_idx=padding_idx)
+        self.embedding = nn.Embedding(vocab_size, d_model,padding_idx=1)
     def forward(self, x):
         return self.embedding(x)

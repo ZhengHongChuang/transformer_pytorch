@@ -27,6 +27,7 @@ class DecoderLayer(nn.Module):
             x = self.norm2(x + _x)
         _x = x
         x = self.ffn(x)
+        
         x = self.dropout3(x)
         x = self.norm3(x + _x)
         return x
