@@ -1,4 +1,3 @@
-
 import torch
 from utils.bleu import idx_to_word
 from data import *
@@ -17,7 +16,6 @@ model = Transformer(src_pad_idx=src_pad_idx,
                     device=device).to(device)
 
 def translate_sentence(sentence, weights_path):
-    sentence = "<sos> "+sentence+" <eos>"
     model.load_state_dict(torch.load(weights_path, map_location=device))
     model.eval()
     with torch.no_grad():
@@ -31,7 +29,6 @@ def translate_sentence(sentence, weights_path):
             trg_mask = model.trg_mask(trg_tensor)
             output = model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
             pred_token = output.argmax(2)[:,-1].item()
-            
             trg_indexes.append(pred_token)
             if pred_token == loader.target.vocab.stoi[loader.target.eos_token]:
                 break
@@ -39,6 +36,6 @@ def translate_sentence(sentence, weights_path):
 
 
 if __name__ == '__main__':
-    sentence = "A group of men are loading cotton onto a truck"
-    weights_path = 'weights/model-3.8387007117271423.pt'
+    sentence = ""
+    weights_path = ''
     translate_sentence(sentence,weights_path)
