@@ -17,6 +17,7 @@ model = Transformer(src_pad_idx=src_pad_idx,
                     device=device).to(device)
 
 def translate_sentence(sentence, weights_path):
+    sentence = "<sos> "+sentence+" <eos>"
     model.load_state_dict(torch.load(weights_path, map_location=device))
     model.eval()
     with torch.no_grad():
@@ -38,6 +39,6 @@ def translate_sentence(sentence, weights_path):
 
 
 if __name__ == '__main__':
-    sentence = "Two children sit on a small seesaw in the sand."
-    weights_path = 'weights/model-5.126847147941589.pt'
+    sentence = "A group of men are loading cotton onto a truck"
+    weights_path = 'weights/model-3.8387007117271423.pt'
     translate_sentence(sentence,weights_path)

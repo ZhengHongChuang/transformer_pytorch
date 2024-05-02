@@ -8,8 +8,8 @@ import torch.nn as nn
     padding_idx: 扩充默认值
 """
 class TokenEmbedding(nn.Module):
-    def __init__(self, vocab_size, d_model,device,padding_idx = 1) :
+    def __init__(self, vocab_size, d_model,padding_idx = 1) :
         super(TokenEmbedding,self).__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model,padding_idx=padding_idx,device=device)
+        self.embedding = nn.Embedding(vocab_size, d_model,padding_idx=padding_idx)
     def forward(self, x):
         return self.embedding(x)

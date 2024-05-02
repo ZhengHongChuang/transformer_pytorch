@@ -23,12 +23,12 @@ def initialize_weights(m):
 model = Transformer(src_pad_idx=src_pad_idx,
                     trg_pad_idx=trg_pad_idx,
                     trg_sos_idx=trg_sos_idx,
-                    d_model=d_model,
                     enc_voc_size=enc_voc_size,
                     dec_voc_size=dec_voc_size,
+                    d_model=d_model,
+                    n_head=n_heads,
                     max_len=max_len,
                     ffn_hidden=ffn_hidden,
-                    n_head=n_heads,
                     n_layers=n_layers,
                     drop_prob=drop_prob,
                     device=device).to(device)
@@ -53,7 +53,7 @@ criterion = nn.CrossEntropyLoss(ignore_index=src_pad_idx)
 def train(model, iterator, optimizer, criterion, clip, step):
     model.train()
     epoch_loss = 0
-    for i, batch in enumerate(iterator):
+    for _, batch in enumerate(iterator):
         src = batch.src
         trg = batch.trg
 
@@ -66,19 +66,15 @@ def train(model, iterator, optimizer, criterion, clip, step):
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
-
         epoch_loss += loss.item()
-        writer.add_scalar('Train Loss', loss.item(), step)
-        step += 1
-
-    return epoch_loss / len(iterator), step
+    return epoch_loss / len(iterator)
 
 def evaluate(model, iterator, criterion, step):
     model.eval()
     epoch_loss = 0
     batch_bleu = []
     with torch.no_grad():
-        for i, batch in enumerate(iterator):
+        for _, batch in enumerate(iterator):
             src = batch.src
             trg = batch.trg
             output = model(src, trg[:, :-1])
@@ -102,26 +98,35 @@ def evaluate(model, iterator, criterion, step):
             total_bleu = sum(total_bleu) / len(total_bleu)
             batch_bleu.append(total_bleu)
             
-            writer.add_scalar('BLEU Score', total_bleu, step)
+            
 
     batch_bleu = sum(batch_bleu) / len(batch_bleu)
-    writer.add_scalar('Validation Loss', epoch_loss / len(iterator), step)
+    
 
-    return epoch_loss / len(iterator), batch_bleu, step
+    return epoch_loss / len(iterator), batch_bleu
 
 def run(total_epoch, best_loss):
-    train_losses, test_losses, bleus = [], [], []
     step = 0
     for step in range(total_epoch):
-        train_loss, step = train(model, train_iter, optimizer, criterion, clip, step)
-        valid_loss, bleu, step = evaluate(model, valid_iter, criterion, step)
+        train_loss = train(model, train_iter, optimizer, criterion, clip, step)
+        valid_loss, bleu = evaluate(model, valid_iter, criterion, step)
         if step > warmup:
             scheduler.step(valid_loss)
-        train_losses.append(train_loss)
-        test_losses.append(valid_loss)
-        bleus.append(bleu)
+        writer.add_scalar('Train Loss', train_loss, step+1)
+        writer.add_scalar('Validation Loss', valid_loss, step+1)
+        writer.add_scalar('BLEU Score', bleu, step+1)
+
+      
         if valid_loss < best_loss:
             best_loss = valid_loss
+            folder = 'weights'
+            for filename in os.listdir(folder):
+                file_path = os.path.join(folder, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(e)
             torch.save(model.state_dict(), 'weights/model-{0}.pt'.format(valid_loss))
 
     writer.close()

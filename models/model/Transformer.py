@@ -15,8 +15,34 @@ class Transformer(nn.Module):
         self.trg_sos_idx = trg_sos_idx
         self.device = device
         # model
-        self.encoder = Encoder(enc_voc_size,max_len,d_model,ffn_hidden,n_head,n_layers,drop_prob,device)
-        self.decoder = Decoder(dec_voc_size,max_len,d_model,ffn_hidden,n_head,n_layers,drop_prob,device)
+        """
+        class Encoder(
+                vocab_size: Any,
+                max_len: Any,
+                d_model: Any,
+                ffn_hiden: Any,
+                n_head: Any,
+                n_layers: Any,
+                drop_prob: Any,
+                device: Any
+)
+        """
+        self.encoder = Encoder(enc_voc_size=enc_voc_size,
+                               max_len=max_len,
+                               d_model = d_model,
+                               ffn_hiden=ffn_hidden,
+                               n_head=n_head,
+                               n_layers=n_layers,
+                               drop_prob=drop_prob,
+                               device=device)
+        self.decoder = Decoder(dec_vocab_size=dec_voc_size,
+                               max_len=max_len,
+                               d_model = d_model,
+                               ffn_hiden=ffn_hidden,
+                               n_head=n_head,
+                               n_layers=n_layers,
+                               drop_prob=drop_prob,
+                               device=device)
 
 
     def forward(self,src,trg):
@@ -27,7 +53,7 @@ class Transformer(nn.Module):
         return output
     def src_mask(self,src):
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-        # print(src_mask)
+      
         return src_mask
     def trg_mask(self, trg):
         trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3).bool()

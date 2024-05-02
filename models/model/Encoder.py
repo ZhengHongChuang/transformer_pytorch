@@ -3,9 +3,9 @@ from models.blocks import EncoderLayer
 from models.embedding.TransformerEmbedding import TransformerEmbedding
 
 class Encoder(nn.Module):
-    def __init__(self,vocab_size,max_len,d_model,ffn_hiden,n_head,n_layers, drop_prob, device):
-        super(Encoder,self).__init__()
-        self.embedding = TransformerEmbedding(vocab_size,d_model,max_len,drop_prob,device)
+    def __init__(self,enc_voc_size,max_len,d_model,ffn_hiden,n_head,n_layers, drop_prob, device):
+        super().__init__()
+        self.embedding = TransformerEmbedding(enc_voc_size,d_model,max_len,drop_prob,device)
         self.encoder_layers = nn.ModuleList([EncoderLayer(d_model,ffn_hiden,n_head,drop_prob) for _ in range(n_layers)])
     def forward(self,x,mask):
         x = self.embedding(x)
