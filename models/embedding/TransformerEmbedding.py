@@ -10,7 +10,7 @@ class TransformerEmbedding(nn.Module):
 
     def forward(self,x):
         tok_emb = self.tok_emb(x)
-        pos_emb = self.pos_emb(x)
+        pos_emb = self.pos_emb(x.size(1))
         return self.drop(tok_emb+pos_emb)
 # if __name__=='__main__':
 #     import torch

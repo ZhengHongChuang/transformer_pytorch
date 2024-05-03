@@ -17,12 +17,12 @@ class DecoderLayer(nn.Module):
         
     def forward(self, dec, enc, trg_mask,src_mask):
         _x = dec
-        x = self.attention1(q=dec,k=dec,v=dec,mask=trg_mask)
+        x = self.attention1(dec,dec,dec,trg_mask)
         x = self.dropout1(x)
         x = self.norm1(x + _x)
         if enc is not None:
             _x = x
-            x = self.attention2(q=x,k=enc,v=enc,mask=src_mask)
+            x = self.attention2(x,enc,enc,src_mask)
             x =self.dropout2(x)
             x = self.norm2(x + _x)
         _x = x
