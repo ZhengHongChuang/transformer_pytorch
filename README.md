@@ -53,6 +53,11 @@ python train.py
 ```
 python test.py
 ```
+### Start Tensorboard
+
+```
+tensorboard --logdir=logs/traintime --host=0.0.0.0 --port=6006
+```
 
 ## Experiments
 ### Train Loss
