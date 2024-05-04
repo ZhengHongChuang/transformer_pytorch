@@ -54,6 +54,13 @@ python train.py
 python test.py
 ```
 
+## Experiments
+### Train Loss
+![Train Loss](image/train.png)
+### Validation Loss
+![Validation Loss](image/val.png)
+
+
 ## Requirements
 * Python == 3.8.9
 * torch == 1.9.1
